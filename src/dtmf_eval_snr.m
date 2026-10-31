@@ -22,7 +22,10 @@ for i = 1:numel(snrDb)
         k = randi(16);
         x = dtmf_generate(keysAll(k), fs, toneDur, 0.05, amp);
         y = x + sigma * randn(size(x));
-        d = dtmf_decode(y, fs, opts);
+        
+        % MODIFICATION ICI : Appel de la version allégée à 2 arguments
+        d = dtmf_decode(y, fs);
+        
         if isempty(d)
             col = 17;
         elseif numel(d) > 1
@@ -33,21 +36,10 @@ for i = 1:numel(snrDb)
         conf(k, col) = conf(k, col) + 1;
     end
     res.conf{i} = conf;
-    res.rate(i) = trace(conf(:, 1:16)) / nTrials;
-    res.missed(i) = sum(conf(:, 17)) / nTrials;
+    % Petite correction mathématique : somme sur tous les essais pour le calcul des ratios finaux
+    res.rate(i) = sum(diag(conf(:, 1:16))) / (16 * nTrials);
+    res.missed(i) = sum(conf(:, 17)) / (16 * nTrials);
     res.wrong(i) = 1 - res.rate(i) - res.missed(i);
 end
 res.keys = keysAll;
 end
-
-
-
-
-%Taux de bonne detection d'une touche isolee en fonction du SNR.
-%   res = DTMF_EVAL_SNR(snrDb, nTrials, fs, toneDur, opts)
-%     snrDb   : vecteur de SNR (dB). SNR = puissance de la tonalite / puissance du bruit
-%     nTrials : nombre de tirages par point
-%   res.rate(i)      : proportion de touches decodees exactement (une seule touche, la bonne)
-%   res.missed(i)    : proportion de non-detections
-%   res.wrong(i)     : proportion de touches fausses ou multiples
-%   res.conf{i}      : matrice de confusion 16 x 18 (16 touches + 'aucune' + 'multiple')
