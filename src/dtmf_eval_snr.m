@@ -1,13 +1,4 @@
 function res = dtmf_eval_snr(snrDb, nTrials, fs, toneDur, opts)
-%Taux de bonne detection d'une touche isolee en fonction du SNR.
-%   res = DTMF_EVAL_SNR(snrDb, nTrials, fs, toneDur, opts)
-%     snrDb   : vecteur de SNR (dB). SNR = puissance de la tonalite / puissance du bruit
-%     nTrials : nombre de tirages par point
-%   res.rate(i)      : proportion de touches decodees exactement (une seule touche, la bonne)
-%   res.missed(i)    : proportion de non-detections
-%   res.wrong(i)     : proportion de touches fausses ou multiples
-%   res.conf{i}      : matrice de confusion 16 x 18 (16 touches + 'aucune' + 'multiple')
-
 
 if nargin < 3 || isempty(fs), fs = 8000; end
 if nargin < 4 || isempty(toneDur), toneDur = 0.08; end
@@ -16,7 +7,7 @@ if nargin < 5, opts = struct(); end
 layout = dtmf_tables();
 keysAll = reshape(layout', 1, []);         
 amp = 0.5;
-sigPow = 2 * amp^2 / 2;                     % deux sinusoides d'amplitude amp
+sigPow = 2 * amp^2 / 2;                    
 
 res.snrDb = snrDb;
 res.rate = zeros(size(snrDb));
