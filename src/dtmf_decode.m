@@ -1,4 +1,4 @@
-function [digits, det] = dtmf_decode(x, fs, opts)s
+function [digits, det] = dtmf_decode(x, fs, opts)
 
 if nargin < 3, opts = struct(); end
 if ~isvector(x), x = mean(x, 2); end   % stereo -> mono

@@ -1,4 +1,4 @@
-function save_fig(fig, filename).
+function save_fig(fig, filename)
 folder = fileparts(filename);
 if ~isempty(folder) && ~exist(folder, 'dir'), mkdir(folder); end
 if exist('exportgraphics', 'file')
