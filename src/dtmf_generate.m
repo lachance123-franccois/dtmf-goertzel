@@ -29,7 +29,6 @@ end
 info.fs = fs;
 end
 
-
 %Genere un signal DTMF pour une suite de touches.
 %   [x, info] = DTMF_GENERATE(keys, fs, toneDur, gapDur, amp)
 %     keys    : chaine de caracteres parmi 0-9, *, #, A-D
