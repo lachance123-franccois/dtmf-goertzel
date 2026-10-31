@@ -1,9 +1,14 @@
 function [layout, fRows, fCols] = dtmf_tables()
-%     layout : matrice 4x4 de caracteres ('123A';'456B';'789C';'*0#D')
-%     fRows  : frequences des lignes   [697 770 852 941] Hz
-%     fCols  : frequences des colonnes [1209 1336 1477 1633] Hz
+% DTMF_TABLES Renvoie la matrice des touches et les fréquences standards DTMF.
+%
+%   [layout, fRows, fCols] = DTMF_TABLES()
+%
+%   Sorties :
+%       layout : Matrice [4x4] de caractères représentant le pavé téléphonique
+%       fRows  : Vecteur [1x4] des fréquences des lignes (basses) en Hz
+%       fCols  : Vecteur [1x4] des fréquences des colonnes (hautes) en Hz
 
-layout = ['123A'; '456B'; '789C'; '*0#D'];
-fRows  = [697 770 852 941];
-fCols  = [1209 1336 1477 1633];
+    layout = ['123A'; '456B'; '789C'; '*0#D'];
+    fRows  =;
+    fCols  =;
 end
