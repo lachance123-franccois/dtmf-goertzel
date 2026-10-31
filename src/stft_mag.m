@@ -1,7 +1,4 @@
 function [S, f, t] = stft_mag(x, fs, nwin, hop)
-%Spectrogramme en module (fenetre de Hann), sans toolbox.
-%   [S, f, t] = STFT_MAG(x, fs, nwin, hop) renvoie S (nfreq x ntrames) en module,
-%   f en Hz et t en s (centre des trames).
 
     x = x(:);
     if numel(x) < nwin, x = [x; zeros(nwin - numel(x), 1)]; end
