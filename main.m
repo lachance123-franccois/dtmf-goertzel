@@ -155,17 +155,21 @@ imagesc(conf ./ sum(conf, 2)); colorbar; colormap(flipud(gray));
 set(gca, 'XTick', 1:18, 'XTickLabel', [cellstr(keysAll')' {'aucune', 'mult.'}], 'YTick', 1:16, 'YTickLabel', cellstr(keysAll'));
 title(sprintf('Matrice de confusion a SNR = %d dB', snrDb(iC)));
 save_fig(fig, fullfile(resDir, 'fig5_confusion.png'));
-
-%% 8. Robustesse a la duree de la tonalit
-durs = 0.02:0.01:0.10; rateDur = zeros(size(durs));
+%% 8. Robustesse a la duree de la tonalite (SNR difficile)
+durs = 0.02:0.01:0.10;
+rateDur = zeros(size(durs));
 for i = 1:numel(durs)
-    r = dtmf_eval_snr(5, 200, fs, durs(i));
+    % Passage à -2 dB pour voir la rupture de performance sous les 30 ms
+    r = dtmf_eval_snr(-2, 200, fs, durs(i)); 
     rateDur(i) = r.rate;
 end
 fig = figure('Position', [100 100 700 400], 'Name', 'Limites de Duree');
 plot(1e3*durs, 100*rateDur, 'o-', 'LineWidth', 1.5); grid on;
+ylim([0 105]); % Fixe l'axe Y pour mieux voir la courbe descendre
 xlabel('Duree (ms)'); ylabel('Bonne detection (%)');
+title('Influence de la duree de la tonalite (SNR = -2 dB)');
 save_fig(fig, fullfile(resDir, 'fig6_detection_vs_duree.png'));
+
 
 %% 9. Enregistrement personnel 
 recFile = fullfile(root, 'data', 'mon_enregistrement.wav');

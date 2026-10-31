@@ -23,7 +23,6 @@ for i = 1:numel(snrDb)
         x = dtmf_generate(keysAll(k), fs, toneDur, 0.05, amp);
         y = x + sigma * randn(size(x));
         
-        % MODIFICATION ICI : Appel de la version allégée à 2 arguments
         d = dtmf_decode(y, fs);
         
         if isempty(d)
@@ -36,9 +35,8 @@ for i = 1:numel(snrDb)
         conf(k, col) = conf(k, col) + 1;
     end
     res.conf{i} = conf;
-    % Petite correction mathématique : somme sur tous les essais pour le calcul des ratios finaux
-    res.rate(i) = sum(diag(conf(:, 1:16))) / (16 * nTrials);
-    res.missed(i) = sum(conf(:, 17)) / (16 * nTrials);
+    res.rate(i) = sum(diag(conf(:, 1:16))) / nTrials;
+    res.missed(i) = sum(conf(:, 17)) / nTrials;
     res.wrong(i) = 1 - res.rate(i) - res.missed(i);
 end
 res.keys = keysAll;
