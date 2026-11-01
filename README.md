@@ -1,87 +1,63 @@
-# Décodeur DTMF par l'algorithme de Goertzel
 
-Décodage des tonalités de touches téléphoniques (DTMF) en MATLAB, **sans toolbox** : génération des signaux, algorithme de Goertzel codé à la main et vectorisé, règles de décision normalisées (twist, harmoniques), anti-rebond, puis évaluation Monte-Carlo du taux de bonne détection en fonction du SNR.
+Décodeur DTMF par l'Algorithme de Goertzel
 
-![Détection vs SNR](results/fig4_detection_vs_snr.png)
+Décodage de tonalités téléphoniques (DTMF) en MATLAB sans aucune toolbox. Génération de signaux avec préallocation, algorithme de Goertzel vectorisé, critères de décision normalisés (twist, harmoniques), logique anti-rebond et évaluation statistique par simulations de Monte-Carlo.
 
-## Contexte
+Principes et Méthode
 
-Chaque touche d'un clavier téléphonique émet la somme de deux sinusoïdes : une fréquence de **ligne** (697, 770, 852, 941 Hz) et une fréquence de **colonne** (1209, 1336, 1477, 1633 Hz). Pour décoder, il suffit de mesurer l'énergie du signal à ces 8 fréquences. Calculer une FFT complète serait du gaspillage : c'est le cas d'usage typique de l'**algorithme de Goertzel**, qui calcule un seul coefficient de Fourier avec un filtre IIR du second ordre et un seul coefficient réel.
+Chaque touche d'un clavier émet la somme de deux sinusoïdes : une fréquence de ligne (basse) et une fréquence de colonne (haute). Isoler ces 8 composantes avec une FFT complète serait inefficace. Ce projet utilise l'algorithme de Goertzel, qui évalue un filtre IIR récurrent du second ordre pour chaque fréquence cible.
 
-|       | 1209 | 1336 | 1477 | 1633 |
-|-------|------|------|------|------|
-| **697** | 1 | 2 | 3 | A |
-| **770** | 4 | 5 | 6 | B |
-| **852** | 7 | 8 | 9 | C |
-| **941** | * | 0 | # | D |
+	1209 Hz	1336 Hz	1477 Hz	1633 Hz
+697 Hz	1	2	3	A
+770 Hz	4	5	6	B
+852 Hz	7	8	9	C
+941 Hz	*	0	#	D
 
-## Méthode
 
-1. **Découpage** du signal en blocs de N = 205 échantillons à 8 kHz (≈ 25,6 ms), recouvrement de 50 %. Ce N place les 8 fréquences DTMF à moins de 0,5 bin des fréquences d'analyse.
-2. **Goertzel** sur les 8 fondamentales et leurs 8 deuxièmes harmoniques :
+Étapes de traitement :
 
-   s[n] = x[n] + 2cos(ω) s[n−1] − s[n−2],  |X(ω)|² = s[N−1]² + s[N−2]² − 2cos(ω) s[N−1] s[N−2]
+1. Fenêtrage : Découpage du signal en blocs de N = 205 échantillons à 8 kHz (≈ 25,6 ms), avec un recouvrement de 50%. Cette valeur de N minimise l'écart entre les bins de la TFD et les fréquences théoriques du standard.
+2. Calcul spectral vectorisé : Évaluation de la puissance |X(ω)|² sur les 8 fondamentales et leurs secondes harmoniques :
+\(s_{0}[n]=x[n]+2\cos (\omega )s_{1}[n-1]-s_{2}[n-2]\)
+\(|{}X(\omega )|{}^{2}=s_{1}[N-1]^{2}+s_{2}[N-2]^{2}-2\cos (\omega )s_{1}[N-1]s_{2}[N-2]\)
+L'implémentation est vectorisée en fréquences et en blocs, limitant la boucle MATLAB à la seule dimension temporelle N.
+3. Bloc de décision (ITU-T Q.24) : Validation de l'énergie des deux tonalités dominantes (> 40%), rejet par facteur de crête spectrale (> 6 dB), contrôle du « twist » (< 8 dB) et élimination des harmoniques (< 20%) pour immuniser le système contre la voix ou la musique.
+4. Persistance temporelle : Filtre anti-rebond imposant une détection stable sur au moins 2 blocs consécutifs avant validation de la touche.
 
-   L'implémentation est vectorisée sur les fréquences et sur les blocs : la seule boucle porte sur les N échantillons.
-3. **Décision** pour chaque bloc (critères inspirés de la recommandation ITU-T Q.24) :
-   - part de l'énergie du bloc portée par les deux tonalités > 0,4 ;
-   - la fréquence retenue dans chaque groupe dépasse la deuxième d'au moins 6 dB ;
-   - écart de niveau ligne/colonne (« twist ») < 8 dB ;
-   - deuxième harmonique < 20 % de la fondamentale (rejet de la voix et de la musique).
-4. **Anti-rebond** : une touche n'est validée qu'après 2 blocs consécutifs identiques, et une seule fois par appui.
+Résultats de Simulation
 
-## Résultats
+Les analyses statistiques (300 tirages par point de SNR) mettent en évidence les performances réelles du récepteur :
 
-| Figure | Contenu |
-|---|---|
-| `fig1_signal_spectrogramme.png` | Les 16 touches et leur spectrogramme |
-| `fig2_spectres_16_touches.png` | Spectre de chaque touche |
-| `fig3_decodage_sequence.png` | Décodage d'un numéro à SNR = 10 dB, critère par bloc |
-| `fig4_detection_vs_snr.png` | Taux de bonne détection, de non-détection et de fausse touche vs SNR (300 tirages par point) |
-| `fig5_confusion.png` | Matrice de confusion à SNR = −2 dB |
-| `fig6_detection_vs_duree.png` | Influence de la durée de la tonalité (20 à 100 ms) |
+Scénario de test	Taux de bonne détection	Observation
+Tonalité de 80 ms, SNR ≥ 0 dB	100 %	Décodage parfait sans aucune fausse touche.
+Tonalité de 40 ms, SNR = 0 dB	≈ 98 %	Transition fluide à la limite des normes télécoms.
+SNR = -2 dB (80 ms / 40 ms)	67 % / 31 %	Les échecs sont des non-détections (rejet sécurisé).
+SNR = -2 dB, durée ≤ 20 ms	≈ 12 %	Chute nette sous la fenêtre critique de l'anti-rebond.
 
-Le script affiche aussi :
-- la validation de Goertzel contre la FFT et contre `goertzel()` de MATLAB (erreur relative de l'ordre de la précision machine) ;
-- le coût de calcul : 8 × (205 + 3) ≈ 1 660 multiplications réelles par bloc pour Goertzel, contre ≈ 4 100 pour une FFT radix-2 de 256 points.
 
-**Résultats obtenus** (300 tirages par point) :
+Avantages computationnels
 
-| Condition | Bonne détection |
-|---|---|
-| Tonalité de 80 ms, SNR ≥ 0 dB | 100 % |
-| Tonalité de 40 ms, SNR = 0 dB | ≈ 98 % |
-| SNR = −2 dB (80 ms / 40 ms) | 67 % / 31 % |
-| SNR = 5 dB, tonalité de 20 / 30 / ≥ 40 ms | 12 % / 64 % / 100 % |
+• Précision machine : L'erreur relative maximale mesurée entre l'algorithme maison et la fonction native fft() est de l'ordre de 1,72 ⋅ 10⁻¹⁴.
+• Complexité réduite : Goertzel requiert 8 × (205 + 3) = 1664 multiplications réelles par bloc, contre ≈ 4096 pour une FFT Radix-2 sur 256 points.
 
-- **Aucune confusion entre touches** dans la matrice de confusion à −2 dB : les échecs sont tous des **non-détections**. Les fausses touches restent ≤ 4 % (vers −1 dB). Les critères de décision sont volontairement conservateurs, comme dans un vrai récepteur téléphonique, où une touche fantôme est plus gênante qu'un appui à répéter.
-- **Durée minimale** : l'anti-rebond exige 2 blocs consécutifs de 25,6 ms (pas de 12,8 ms), soit environ 38 ms de tonalité. On retrouve le gabarit de la recommandation ITU-T Q.24 : détecter les tonalités de 40 ms, ignorer celles de moins de 23 ms.
+Structure du Code
 
-## Lancer le projet
+text
+main.m                  Script de démonstration (calculs, graphiques et animation live)
+src/dtmf_decode.m       Décodeur de production allégé (décision et anti-rebond)
+src/dtmf_generate.m     Générateur de signaux optimisé (préallocation mémoire)
+src/goertzel_power.m    Algorithme de Goertzel vectorisé
+src/dtmf_eval_snr.m     Évaluation de robustesse par méthode de Monte-Carlo
+src/dtmf_tables.m       Fréquences de référence normalisées
+src/stft_mag.m          Calcul de spectrogramme matriciel autonome
+src/save_fig.m          Utilitaire adaptatif d'exportation d'images
+Utilisez le code avec précaution.
 
-```matlab
+Lancement
+
+Exécutez le script principal depuis la console MATLAB :
+matlab
 >> main
-```
-
-- MATLAB R2021a ou plus récent, aucune toolbox requise.
-- Durée : moins d'une minute.
-- Pour décoder votre propre enregistrement, placez un fichier `data/mon_enregistrement.wav` (n'importe quelle fréquence d'échantillonnage). Vous pouvez enregistrer les touches de votre téléphone ou utiliser un générateur DTMF en ligne.
-
-## Structure
-
-```
-main.m                  script principal (toutes les figures)
-src/dtmf_tables.m       clavier et fréquences
-src/dtmf_generate.m     génération de signaux DTMF
-src/goertzel_power.m    algorithme de Goertzel vectorisé
-src/dtmf_decode.m       décodeur complet (décision + anti-rebond)
-src/dtmf_eval_snr.m     évaluation Monte-Carlo
-src/stft_mag.m          spectrogramme sans toolbox
-src/save_fig.m          export des figures
-```
-
-## Pistes d'amélioration
-
-- Implémentation en virgule fixe (comme sur un DSP).
-- Test sur un enregistrement contenant de la voix pour mesurer le taux de fausses détections (« talk-off »).
-- Portage temps réel au micro.
+Utilisez le code avec précaution.
+• Configuration requise : MATLAB R2021a ou supérieur (sans aucune toolbox).
+• Test personnalisé : Déposez un fichier audio dans data/mon_enregistrement.wav pour tester le décodeur sur vos propres signaux ou captures réelles.

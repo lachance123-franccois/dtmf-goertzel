@@ -1,20 +1,16 @@
-# Fichiers temporaires MATLAB
+# Cache et fichiers temporaires MATLAB
+.matlab/
 *.asv
-*.m~
-*.autosave
-slprj/
+*.slxc
 *.mex*
+*.p
 
-# Gros fichiers personnels (gardez les donnees lourdes hors du depot)
-data/*.wav
-data/*.mp3
-data/*.flac
-data/*.jpg
-data/*.png
-data/songs/
-data/pano/
-!data/README.md
+# Dossiers de résultats locaux (générés par main.m)
+results/
 
-# Systeme
+# Données personnelles ou enregistrements volumineux
+data/mon_enregistrement.wav
+
+# Fichiers de configuration des dossiers OS
 .DS_Store
 Thumbs.db
