@@ -7,12 +7,6 @@ Contexte
 
 Chaque touche d'un clavier téléphonique émet la somme de deux sinusoïdes, combinant une fréquence de ligne et une fréquence de colonne. Pour décoder le signal, il suffit de mesurer l'énergie aux fréquences spécifiques définies par la norme. Calculer une transformée de Fourier complète sur tout le spectre s'avère inutile. Ce projet met en œuvre l'algorithme de Goertzel, particulièrement adapté à ce cas d'usage, car il permet d'évaluer la puissance spectrale sur des fréquences cibles uniques au moyen d'un filtre récurrent du second ordre à coefficient réel.
 
-	|1209	|1336	|1477	|1633
-697	|1	|2	|3	|A
-770	|4	|5	|6	|B
-852	|7	|8	|9	|C
-941	|*	|0	|#	|D
-
 
 Méthode
 
